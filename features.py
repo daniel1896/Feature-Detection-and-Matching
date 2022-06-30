@@ -5,13 +5,20 @@
 import cv2 as cv
 import globals
 import numpy as np
+from packaging import version
+
 
 # Call function SIFT
 def SIFT():
     # Initiate SIFT detector
-    SIFT = cv.xfeatures2d.SIFT_create()
+    # if opencv version is 4.4.0 or higher
+    if version.parse(cv.__version__) >= version.parse('4.4.0'):
+        SIFT = cv.SIFT_create()
+    elif version.parse(cv.__version__) >= version.parse('3.2.0'):
+        SIFT = cv.xfeatures2d.SIFT_create()
 
     return SIFT
+
 
 # Call function SURF
 def SURF():
@@ -20,12 +27,14 @@ def SURF():
 
     return SURF
 
+
 # Call function KAZE
 def KAZE():
     # Initiate KAZE descriptor
     KAZE = cv.KAZE_create()
 
     return KAZE
+
 
 # Call function BRIEF
 def BRIEF():
@@ -34,12 +43,14 @@ def BRIEF():
 
     return BRIEF
 
+
 # Call function ORB
 def ORB():
     # Initiate ORB detector
     ORB = cv.ORB_create()
 
     return ORB
+
 
 # Call function BRISK
 def BRISK():
@@ -48,12 +59,14 @@ def BRISK():
 
     return BRISK
 
+
 # Call function AKAZE
 def AKAZE():
     # Initiate AKAZE descriptor
     AKAZE = cv.AKAZE_create()
 
     return AKAZE
+
 
 # Call function FREAK
 def FREAK():
@@ -62,6 +75,7 @@ def FREAK():
 
     return FREAK
 
+
 # Call function features
 def features(image):
     # Find the keypoints
@@ -69,8 +83,9 @@ def features(image):
 
     # Compute the descriptors
     keypoints, descriptors = globals.descriptor.compute(image, keypoints)
-    
+
     return keypoints, descriptors
+
 
 # Call function prints
 def prints(keypoints,
@@ -96,6 +111,7 @@ def prints(keypoints,
     # Print shape of descriptor
     print('Shape of Descriptor:', descriptor.shape, '\n')
 
+
 # Call function matcher
 def matcher(image1,
             image2,
@@ -105,7 +121,6 @@ def matcher(image1,
             descriptors2,
             matcher,
             descriptor):
-
     if matcher == 'BF':
         # Se descritor for um Descritor de Recursos Locais utilizar NOME
         if (descriptor == 'SIFT') or (descriptor == 'SURF') or (descriptor == 'KAZE'):
@@ -114,24 +129,24 @@ def matcher(image1,
             normType = cv.NORM_HAMMING
 
         # Create BFMatcher object
-        BFMatcher = cv.BFMatcher(normType = normType,
-                                 crossCheck = True)
+        BFMatcher = cv.BFMatcher(normType=normType,
+                                 crossCheck=True)
 
         # Matching descriptor vectors using Brute Force Matcher
-        matches = BFMatcher.match(queryDescriptors = descriptors1,
-                                  trainDescriptors = descriptors2)
+        matches = BFMatcher.match(queryDescriptors=descriptors1,
+                                  trainDescriptors=descriptors2)
 
         # Sort them in the order of their distance
-        matches = sorted(matches, key = lambda x: x.distance)
+        matches = sorted(matches, key=lambda x: x.distance)
 
         # Draw first 30 matches
-        globals.output = cv.drawMatches(img1 = image1,
-                                        keypoints1 = keypoints1,
-                                        img2 = image2,
-                                        keypoints2 = keypoints2,
-                                        matches1to2 = matches[:30],
-                                        outImg = None,
-                                        flags = cv.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
+        globals.output = cv.drawMatches(img1=image1,
+                                        keypoints1=keypoints1,
+                                        img2=image2,
+                                        keypoints2=keypoints2,
+                                        matches1to2=matches[:30],
+                                        outImg=None,
+                                        flags=cv.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
 
         return globals.output
 
@@ -139,23 +154,23 @@ def matcher(image1,
         # FLANN parameters
         FLANN_INDEX_KDTREE = 1
 
-        index_params = dict(algorithm = FLANN_INDEX_KDTREE,
-                            trees = 5)
+        index_params = dict(algorithm=FLANN_INDEX_KDTREE,
+                            trees=5)
 
-        search_params = dict(checks = 50)
+        search_params = dict(checks=50)
 
         # Converto to float32
         descriptors1 = np.float32(descriptors1)
         descriptors2 = np.float32(descriptors2)
 
         # Create FLANN object
-        FLANN = cv.FlannBasedMatcher(indexParams = index_params,
-                                     searchParams = search_params)
+        FLANN = cv.FlannBasedMatcher(indexParams=index_params,
+                                     searchParams=search_params)
 
         # Matching descriptor vectors using FLANN Matcher
-        matches = FLANN.knnMatch(queryDescriptors = descriptors1,
-                                 trainDescriptors = descriptors2,
-                                 k = 2)
+        matches = FLANN.knnMatch(queryDescriptors=descriptors1,
+                                 trainDescriptors=descriptors2,
+                                 k=2)
 
         # Lowe's ratio test
         ratio_thresh = 0.7
@@ -169,12 +184,12 @@ def matcher(image1,
                 good_matches.append(m)
 
         # Draw only "good" matches
-        globals.output = cv.drawMatches(img1 = image1,
-                                        keypoints1 = keypoints1,
-                                        img2 = image2,
-                                        keypoints2 = keypoints2,
-                                        matches1to2 = good_matches,
-                                        outImg = None,
-                                        flags = cv.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
+        globals.output = cv.drawMatches(img1=image1,
+                                        keypoints1=keypoints1,
+                                        img2=image2,
+                                        keypoints2=keypoints2,
+                                        matches1to2=good_matches,
+                                        outImg=None,
+                                        flags=cv.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
 
         return globals.output
