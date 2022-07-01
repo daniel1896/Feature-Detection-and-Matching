@@ -9,6 +9,11 @@ from matplotlib import pyplot as plt
 
 
 class FeatureMatcher:
+    BF_LIMIT = 20           # Limits the number of matches to be displayed
+    FLANN_INDEX_KDTREE = 1  # FLANN INDEX KDTREE parameter
+    FLANN_RATIO_TH = 0.7    # Limits the number of matches to be displayed
+    FLANN_CHECKS = 50       # higher: more accurate, but slower
+
     def __init__(self, detector_name, descriptor_name, matcher_name):
         """
         :param detector_name: (SIFT, SURF, KAZE, ORB, BRISK, AKAZE)
@@ -28,7 +33,9 @@ class FeatureMatcher:
         self.detector = self.get_detector()
         self.descriptor = self.get_descriptor()
         # resulting matches
-        self.matches = None
+        self.matches = []
+        self.matches_img = None
+        self.time = -1.0
 
     def get_detector(self):
         """
@@ -103,8 +110,11 @@ class FeatureMatcher:
         """
         :param image1: input image 1
         :param image2: input image 2
-        :return: matches
+        :return: matches_img
         """
+        # measure time
+        start = cv.getTickCount()
+
         # get features
         keypoints1, descriptors1 = self.get_features(image1)
         keypoints2, descriptors2 = self.get_features(image2)
@@ -120,57 +130,72 @@ class FeatureMatcher:
             # brute force matching
             bf = cv.BFMatcher_create(normType=normType, crossCheck=True)  # TODO: why crossCheck=True?
             matches_all = bf.match(descriptors1, descriptors2)
-            # sort matches in the order of their distance
+            # sort matches_img in the order of their distance
             matches_all = sorted(matches_all, key=lambda x: x.distance)
-            # return the best matches
-            self.matches = cv.drawMatches(image1, keypoints1, image2, keypoints2, matches_all[:20],
-                                         outImg=None, flags=cv.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
-            return self.matches
+            self.matches = matches_all[:self.BF_LIMIT]
+            # return the best matches_img
+            self.matches_img = cv.drawMatches(image1, keypoints1, image2, keypoints2, self.matches,
+                                              outImg=None, flags=cv.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
 
         elif self.matcher_name == 'FLANN':
             # FLANN parameters
-            FLANN_INDEX_KDTREE = 1
-            index_params = dict(algorithm=FLANN_INDEX_KDTREE, trees=5)
-            search_params = dict(checks=50)
+            index_params = dict(algorithm=self.FLANN_INDEX_KDTREE, trees=5)
+            search_params = dict(checks=self.FLANN_CHECKS)
 
             # flann matching
             flann = cv.FlannBasedMatcher(index_params, search_params)
             # matching descriptor vectors using FLANN Matcher
             matches_all = flann.knnMatch(np.float32(descriptors1), np.float32(descriptors2), k=2)
 
-            # Lowe's ratio test to filter matches
-            ratio_thresh = 0.7
-            good_matches = []
+            # Lowe's ratio test to filter matches_img
+            self.matches = []
             for m, n in matches_all:
-                if m.distance < ratio_thresh * n.distance:
-                    good_matches.append(m)
+                if m.distance < self.FLANN_RATIO_TH * n.distance:
+                    self.matches.append(m)
 
-            # draw good matches
-            self.matches = cv.drawMatches(image1, keypoints1, image2, keypoints2, good_matches,
-                                         outImg=None, flags=cv.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
+            # draw good matches_img
+            self.matches_img = cv.drawMatches(image1, keypoints1, image2, keypoints2, self.matches,
+                                              outImg=None, flags=cv.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
 
-            return self.matches
         else:
             raise ValueError('Invalid matcher name')
 
+        # measure time
+        end = cv.getTickCount()
+        self.time = (end - start) / cv.getTickFrequency()
+        print('Time: %.2fs' % self.time)
+        print('Matches: {}'.format(len(self.matches)))
+
+        return self.matches_img
+
     # Call function saveMatcher
-    def save_matches(self, matches=None):
+    def plot_matches(self):
         """
-        Shows the matches by plotting them on the images and saving them in the Results folder
-        :param matches: input matches (optional: if not provided, use self.matches)
+        Shows the matches_img by plotting them on the images and saving them in the Results folder
+        :param matches_img: input matches_img (optional: if not provided, use self.matches_img)
         """
-        if matches is None:
-            matches = self.matches
-
         # Create a new figure
-        plt.figure()
-        plt.axis('off')
-        plt.imshow(matches)
+        fig = plt.figure()
+        ax = fig.add_subplot()
+        ax.axis('off')
+        ax.margins(0)
 
-        plt.imsave(fname='Results/%s-with-%s-%s.png' % (self.matcher_name, self.detector_name, self.descriptor_name),
-                   arr=matches)
+        # Plot the images
+        ax.imshow(self.matches_img)
+        ax.title.set_text('Matcher: ' + self.matcher_name +
+                          ',  Detector: ' + self.detector_name +
+                          ',  Descriptor: ' + self.descriptor_name)
+        # put the time in the bottom right corner and the number of matches in the bottom left corner
+        ax.text(0.99, 0.01, 'Time: %.2fs' % self.time, color='orange',
+                horizontalalignment='right', verticalalignment='bottom',
+                transform=ax.transAxes, fontsize=10)
+        ax.text(0.01, 0.01, 'Matches: {}'.format(len(self.matches)), color='orange',
+                horizontalalignment='left', verticalalignment='bottom',
+                transform=ax.transAxes, fontsize=10)
 
+        # save and show the figure
+        fig.tight_layout()
+        plt.savefig('Results/%s-with-%s-%s.png' % (self.matcher_name, self.detector_name, self.descriptor_name),
+                    bbox_inches='tight', dpi=300)
         plt.show()
-
-        # Close it
         plt.close()
