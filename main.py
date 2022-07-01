@@ -94,18 +94,13 @@ if __name__ == '__main__':
     image1, image2 = readImages()
 
     if not arguments.all:
+        # run a single combination
         print('Running {} {} {}'.format(arguments.detector, arguments.descriptor, arguments.matcher))
-        # measure time
-        start = cv.getTickCount()
         matcher = FeatureMatcher(arguments.detector, arguments.descriptor, arguments.matcher)
         matches = matcher.match(image1, image2)
-        matcher.save_matches()
-        end = cv.getTickCount()
-        time = (end - start) / cv.getTickFrequency()
-        print('Time: {}'.format(time))
-        print('Matches: {}'.format(len(matches)))
+        matcher.plot_matches()
     else:
-        # Run all combinations
+        # run all combinations
         detectors = ['SIFT', 'SURF', 'KAZE', 'ORB', 'BRISK', 'AKAZE']
         descriptors = ['SIFT', 'SURF', 'KAZE', 'BRIEF', 'ORB', 'BRISK', 'AKAZE', 'FREAK']
         matcher_types = ['BF', 'FLANN']
@@ -115,15 +110,9 @@ if __name__ == '__main__':
                     print('--------------------------')
                     try:
                         print('Running {} {} {}'.format(detector, descriptor, matcher_type))
-                        # measure time
-                        start = cv.getTickCount()
                         matcher = FeatureMatcher(detector, descriptor, matcher_type)
                         matches = matcher.match(image1, image2)
-                        matcher.save_matches()
-                        end = cv.getTickCount()
-                        time = (end - start) / cv.getTickFrequency()
-                        print('Time: {}'.format(time))
-                        print('Matches: {}'.format(len(matches)))
+                        matcher.plot_matches()
                     except Exception as e:
                         print("Some combinations are not supported and fail.")
                         print('Error: {}'.format(e))
