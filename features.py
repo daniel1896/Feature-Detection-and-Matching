@@ -3,7 +3,6 @@
 
 # Imports
 import cv2 as cv
-import globals
 import numpy as np
 from packaging import version
 
@@ -13,67 +12,67 @@ def SIFT():
     # Initiate SIFT detector
     # if opencv version is 4.4.0 or higher
     if version.parse(cv.__version__) >= version.parse('4.4.0'):
-        SIFT = cv.SIFT_create()
+        sift = cv.SIFT_create()
     elif version.parse(cv.__version__) >= version.parse('3.2.0'):
-        SIFT = cv.xfeatures2d.SIFT_create()
+        sift = cv.xfeatures2d.SIFT_create()
 
-    return SIFT
+    return sift
 
 
 # Call function SURF
 def SURF():
     # Initiate SURF descriptor
-    SURF = cv.xfeatures2d.SURF_create()
+    surf = cv.xfeatures2d.SURF_create()
 
-    return SURF
+    return surf
 
 
 # Call function KAZE
 def KAZE():
     # Initiate KAZE descriptor
-    KAZE = cv.KAZE_create()
+    kaze = cv.KAZE_create()
 
-    return KAZE
+    return kaze
 
 
 # Call function BRIEF
 def BRIEF():
     # Initiate BRIEF descriptor
-    BRIEF = cv.xfeatures2d.BriefDescriptorExtractor_create()
+    brief = cv.xfeatures2d.BriefDescriptorExtractor_create()
 
-    return BRIEF
+    return brief
 
 
 # Call function ORB
 def ORB():
     # Initiate ORB detector
-    ORB = cv.ORB_create()
+    orb = cv.ORB_create()
 
-    return ORB
+    return orb
 
 
 # Call function BRISK
 def BRISK():
     # Initiate BRISK descriptor
-    BRISK = cv.BRISK_create()
+    brisk = cv.BRISK_create()
 
-    return BRISK
+    return brisk
 
 
 # Call function AKAZE
 def AKAZE():
     # Initiate AKAZE descriptor
-    AKAZE = cv.AKAZE_create()
+    akaze = cv.AKAZE_create()
 
-    return AKAZE
+    return akaze
 
 
 # Call function FREAK
 def FREAK():
     # Initiate FREAK descriptor
-    FREAK = cv.xfeatures2d.FREAK_create()
+    freak = cv.xfeatures2d.FREAK_create()
 
-    return FREAK
+    return freak
 
 
 # Call function features

@@ -6,170 +6,125 @@
 # Imports
 import argparse
 import cv2 as cv
-import features
-import globals
-import numpy as np
-import outputs
-import save_figures
 
-# Initializing global variables
-globals.initialize()
+from feature_matcher import FeatureMatcher
 
-# Message from usage
-message = '''main.py [-h]
 
-             --detector     {SIFT, SURF, KAZE, ORB, BRISK,AKAZE}
-             --descriptor   {SIFT, SURF, KAZE, BRIEF, ORB, BRISK, AKAZE, FREAK}
-             --matcher      {BF, FLANN}'''
+def parse_args():
+    # Message from usage
+    message = """main.py [-h]
 
-# Create the parser
-parser = argparse.ArgumentParser(description = 'Feature Description and Matching.',
-                                usage = message)
+                 --detector     {SIFT, SURF, KAZE, ORB, BRISK, AKAZE}
+                 --descriptor   {SIFT, SURF, KAZE, BRIEF, ORB, BRISK, AKAZE, FREAK}
+                 --matcher      {BF, FLANN}
+                 --all          {run all combinations}"""
+    # Create the parser
+    parser = argparse.ArgumentParser(description='Feature Description and Matching.',
+                                     usage=message)
+    # Argument --detector
+    parser.add_argument('--detector',
+                        action='store',
+                        choices=['SIFT', 'SURF', 'KAZE', 'ORB', 'BRISK', 'AKAZE'],
+                        required=False,
+                        metavar='',
+                        dest='detector',
+                        help='select the detector to be used in this experiment')
+    # Argument --descriptor
+    parser.add_argument('--descriptor',
+                        action='store',
+                        choices=['SIFT', 'SURF', 'KAZE', 'BRIEF', 'ORB', 'BRISK', 'AKAZE', 'FREAK'],
+                        required=False,
+                        metavar='',
+                        dest='descriptor',
+                        help='select the descriptor to be used in this experiment')
+    # Argument --matcher
+    parser.add_argument('--matcher',
+                        action='store',
+                        choices=['BF', 'FLANN'],
+                        required=False,
+                        metavar='',
+                        dest='matcher',
+                        help='select the matcher to be used in this experiment')
+    # Argument --all
+    parser.add_argument('--all', action='store_true', required=False, dest='all', help='run all combinations')
+    # TODO: for Python 3.9+, use the following:
+    # parser.add_argument('--all', action=argparse.BooleanOptionalAction, required=False, dest='all', help='...')
 
-# Argument --detector
-parser.add_argument('--detector',
-                    action = 'store',
-                    choices = ['SIFT', 'SURF', 'KAZE', 'ORB', 'BRISK', 'AKAZE'],
-                    required = True,
-                    metavar = '',
-                    dest = 'detector',
-                    help = 'select the detector to be used in this experiment')
+    # Parse the arguments
+    args = parser.parse_args()
 
-# Argument --descriptor
-parser.add_argument('--descriptor',
-                    action = 'store',
-                    choices = ['SIFT', 'SURF', 'KAZE', 'BRIEF', 'ORB', 'BRISK', 'AKAZE', 'FREAK'],
-                    required = True,
-                    metavar = '',
-                    dest = 'descriptor',
-                    help = 'select the descriptor to be used in this experiment')
+    # if either --detector or --descriptor or --matcher is not specified, then run all combinations
+    if not(args.detector and args.descriptor and args.matcher):
+        args.all = True
 
-# Argument --matcher
-parser.add_argument('--matcher',
-                    action = 'store',
-                    choices = ['BF', 'FLANN'],
-                    required = True,
-                    metavar = '',
-                    dest = 'matcher',
-                    help = 'select the matcher to be used in this experiment')
+    # return arguments
+    return args
 
-# Execute the parse_args() method
-arguments = parser.parse_args()
 
-# Initiate Detector and Descriptor
+def readImages(path1=None, path2=None):
+    if path1 or path2 is None:
+        # open file dialog
+        import tkinter as tk
+        from tkinter import filedialog
+        if path1 is None:
+            tk.Tk().withdraw()
+            path1 = filedialog.askopenfilename()
+        if path2 is None:
+            tk.Tk().withdraw()
+            path2 = filedialog.askopenfilename()
 
-# Initiate detector selected
-if arguments.detector == 'SIFT':
-    globals.detector = features.SIFT()
+    # Read the images
+    img1 = cv.imread(path1, cv.IMREAD_GRAYSCALE)
+    if img1 is None:
+        print('Error: image 1 not found at {}'.format(path1))
+        exit(0)
+    img2 = cv.imread(path2, cv.IMREAD_GRAYSCALE)
+    if img2 is None:
+        print('Error: image 2 not found at {}'.format(path2))
+        exit(0)
 
-elif arguments.detector == 'SURF':
-    globals.detector = features.SURF()
+    return img1, img2
 
-elif arguments.detector == 'KAZE':
-    globals.detector = features.SIFT()
 
-elif arguments.detector == 'ORB':
-    globals.detector = features.ORB()
+if __name__ == '__main__':
+    # Parse the arguments
+    arguments = parse_args()
 
-elif arguments.detector == 'BRISK':
-    globals.detector = features.BRISK()
+    # read images
+    image1, image2 = readImages()
 
-elif arguments.detector == 'AKAZE':
-    globals.detector = features.AKAZE()
-
-# Initiate descriptor selected
-if arguments.descriptor == 'SIFT':
-    globals.descriptor = features.SIFT()
-
-elif arguments.descriptor == 'SURF':
-    globals.descriptor = features.SURF()
-
-elif arguments.descriptor == 'KAZE':
-    globals.descriptor = features.SIFT()
-
-elif arguments.descriptor == 'BRIEF':
-    globals.descriptor = features.BRIEF()
-
-elif arguments.descriptor == 'ORB':
-    globals.descriptor = features.ORB()
-
-elif arguments.descriptor == 'BRISK':
-    globals.descriptor = features.BRISK()
-
-elif arguments.descriptor == 'AKAZE':
-    globals.descriptor = features.AKAZE()
-
-elif arguments.descriptor == 'FREAK':
-    globals.descriptor = features.FREAK()
-
-# Open and Convert the input image from BGR to GRAYSCALE
-image1 = cv.imread(filename = 'Figures/image1.jpg',
-                   flags = cv.IMREAD_GRAYSCALE)
-
-# Open and Convert the training-set image from BGR to GRAYSCALE
-image2 = cv.imread(filename = 'Figures/image2.jpg',
-                   flags = cv.IMREAD_GRAYSCALE)
-
-# Could not open or find the images
-if image1 is None or image2 is None:
-    print('\nCould not open or find the images.')
-    exit(0)
-
-# Find the keypoints and compute
-# the descriptors for input image
-globals.keypoints1, globals.descriptors1 = features.features(image1)
-
-# Print
-print('\nInput image:\n')
-
-# Print infos for input image 
-features.prints(keypoints = globals.keypoints1,
-                descriptor = globals.descriptors1)
-
-# Find the keypoints and compute
-# the descriptors for training-set image
-globals.keypoints2, globals.descriptors2 = features.features(image2)
-
-# Print
-print('Training-set image:\n')
-
-# Print infos for training-set image
-features.prints(keypoints = globals.keypoints2,
-                descriptor = globals.descriptors2)
-
-# Matcher 
-output = features.matcher(image1 = image1,
-                          image2 = image2,
-                          keypoints1 = globals.keypoints1,
-                          keypoints2 = globals.keypoints2,
-                          descriptors1 = globals.descriptors1,
-                          descriptors2 = globals.descriptors2,
-                          matcher = arguments.matcher,
-                          descriptor = arguments.descriptor)
-
-# Save Figure Matcher
-save_figures.saveMatcher(output = output,
-			             matcher = arguments.matcher,
-                         descriptor = arguments.descriptor)
-
-# Save keypoints and descriptors into a file
-# from input image
-outputs.saveKeypointsAndDescriptors(keypoints = globals.keypoints1,
-								    descriptors = globals.descriptors1,
-                                    matcher = arguments.matcher,
-                                    descriptor = arguments.descriptor,
-                                    flags = 1)
-
-# Save keypoints and descriptors into a file
-# from training-set image
-outputs.saveKeypointsAndDescriptors(keypoints = globals.keypoints2,
-								    descriptors = globals.descriptors2,
-                                    matcher = arguments.matcher,
-                                    descriptor = arguments.descriptor,
-                                    flags = 2)
-
-# Print
-print('Done!\n')
-
-# Print
-print('Feature Description and Matching executed with success!')
+    if not arguments.all:
+        print('Running {} {} {}'.format(arguments.detector, arguments.descriptor, arguments.matcher))
+        # measure time
+        start = cv.getTickCount()
+        matcher = FeatureMatcher(arguments.detector, arguments.descriptor, arguments.matcher)
+        matches = matcher.match(image1, image2)
+        matcher.save_matches()
+        end = cv.getTickCount()
+        time = (end - start) / cv.getTickFrequency()
+        print('Time: {}'.format(time))
+        print('Matches: {}'.format(len(matches)))
+    else:
+        # Run all combinations
+        detectors = ['SIFT', 'SURF', 'KAZE', 'ORB', 'BRISK', 'AKAZE']
+        descriptors = ['SIFT', 'SURF', 'KAZE', 'BRIEF', 'ORB', 'BRISK', 'AKAZE', 'FREAK']
+        matcher_types = ['BF', 'FLANN']
+        for matcher_type in matcher_types:
+            for detector in detectors:
+                for descriptor in descriptors:
+                    print('--------------------------')
+                    try:
+                        print('Running {} {} {}'.format(detector, descriptor, matcher_type))
+                        # measure time
+                        start = cv.getTickCount()
+                        matcher = FeatureMatcher(detector, descriptor, matcher_type)
+                        matches = matcher.match(image1, image2)
+                        matcher.save_matches()
+                        end = cv.getTickCount()
+                        time = (end - start) / cv.getTickFrequency()
+                        print('Time: {}'.format(time))
+                        print('Matches: {}'.format(len(matches)))
+                    except Exception as e:
+                        print("Some combinations are not supported and fail.")
+                        print('Error: {}'.format(e))
+                        continue

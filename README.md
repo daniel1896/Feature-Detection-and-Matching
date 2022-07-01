@@ -1,9 +1,9 @@
 # Feature Detection and Matching
 
-![GitHub language count](https://img.shields.io/github/languages/count/whoisraibolt/Feature-Detection-and-Matching)
-![GitHub top language](https://img.shields.io/github/languages/top/whoisraibolt/Feature-Detection-and-Matching)
-![GitHub repo size](https://img.shields.io/github/repo-size/whoisraibolt/Feature-Detection-and-Matching)
-![GitHub](https://img.shields.io/github/license/whoisraibolt/Feature-Detection-and-Matching)
+[comment]: <> (![GitHub language count]&#40;https://img.shields.io/github/languages/count/whoisraibolt/Feature-Detection-and-Matching&#41;)
+[comment]: <> (![GitHub top language]&#40;https://img.shields.io/github/languages/top/whoisraibolt/Feature-Detection-and-Matching&#41;)
+[comment]: <> (![GitHub repo size]&#40;https://img.shields.io/github/repo-size/whoisraibolt/Feature-Detection-and-Matching&#41;)
+[comment]: <> (![GitHub]&#40;https://img.shields.io/github/license/whoisraibolt/Feature-Detection-and-Matching&#41;)
 
 Feature Detection and Matching between two images using Local Feature Descriptors and Local Binary Descriptors through the Brute Force and FLANN algorithms.
 
@@ -11,7 +11,7 @@ From this application it is possible to solve several problems in the area of Co
 
 ## Overview
 
-This project performs Feature Detection and Matching with SIFT, SURF, KAZE, BRIEF, ORB, BRISK, AKAZE and FREAK through the Brute Force and FLANN algorithms using Python (version 3.6.10) and OpenCV (version 3.3.1).
+This project performs Feature Detection and Matching with SIFT, SURF, KAZE, BRIEF, ORB, BRISK, AKAZE and FREAK through the Brute Force and FLANN algorithms using OpenCV (version 3.4.2). You can use different Versions, but it cannot be guaranteed that all feature matching approaches will work. SURF for example is not available for OpenCV versions higher than 3.4.2.
 
 ![Feature Detection and Matching with KAZE through the Brute Force algorithm](https://raw.githubusercontent.com/whoisraibolt/Feature-Detection-and-Matching/master/Figures/BF-with-KAZE.png)
 
@@ -31,6 +31,9 @@ To install the dependencies run:
 | `--detector`  | Specify SIFT or SURF or KAZE or ORB or BRISK or AKAZE                   |
 | `--descriptor`| Specify SIFT or SURF or KAZE or BRIEF or ORB or BRISK or AKAZE or FREAK |
 | `--matcher `  | Specify BF or FLANN                                                     |
+| `--all`       | Run all combinations of detector, descriptor and matcher             |
+
+If no arguments are given or one of the arguments (detector, descriptor or matcher) is missing, it defaults to run all combinations.
 
 ## Examples
 
@@ -39,6 +42,10 @@ To install the dependencies run:
 
 #### Brute Force with ORB
 `python main.py --detector ORB --descriptor ORB --matcher BF`
+
+#### Run all combinations
+`python main.py` </br>
+`python main.py --all`
 
 ## Recommended Readings
 - [Feature Detection and Description](https://github.com/whoisraibolt/Feature-Detection-and-Description "Feature Detection and Description")
