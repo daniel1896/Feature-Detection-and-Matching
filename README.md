@@ -13,7 +13,7 @@ From this application it is possible to solve several problems in the area of Co
 
 This project performs Feature Detection and Matching with SIFT, SURF, KAZE, BRIEF, ORB, BRISK, AKAZE and FREAK through the Brute Force and FLANN algorithms using OpenCV (version 3.4.2). You can use different Versions, but it cannot be guaranteed that all feature matching approaches will work. SURF for example is not available for OpenCV versions higher than 3.4.2.
 
-![Feature Detection and Matching with KAZE through the Brute Force algorithm](https://raw.githubusercontent.com/whoisraibolt/Feature-Detection-and-Matching/master/Figures/BF-with-KAZE.png)
+![Feature Detection and Matching with KAZE through the Brute Force algorithm](https://raw.githubusercontent.com/daniel1896/Feature-Detection-and-Matching/master/Results/FLANN-with-SURF-SURF.png)
 
 ## Dependencies
 
