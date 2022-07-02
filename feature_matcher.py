@@ -6,6 +6,7 @@
 import numpy as np
 import cv2 as cv
 from matplotlib import pyplot as plt
+from copy import copy
 
 
 class FeatureMatcher:
@@ -13,6 +14,8 @@ class FeatureMatcher:
     FLANN_INDEX_KDTREE = 1  # FLANN INDEX KDTREE parameter
     FLANN_RATIO_TH = 0.7    # Limits the number of matches to be displayed
     FLANN_CHECKS = 50       # higher: more accurate, but slower
+    HOMOGRAPHY_MATCH_TH = 10  # number of matches that are necessary for homography
+    HOMOGRAPHY_RANSAC_TH = 5  # Maximum reprojection error in the RANSAC algorithm to consider a point as an inlier.
 
     def __init__(self, detector_name, descriptor_name, matcher_name):
         """
@@ -32,6 +35,12 @@ class FeatureMatcher:
         # objects
         self.detector = self.get_detector()
         self.descriptor = self.get_descriptor()
+        # images to match
+        self.img1 = None
+        self.img2 = None
+        # keypoints and descriptors
+        self.kpt1, self.des1 = None, None
+        self.kpt2, self.des2 = None, None
         # resulting matches
         self.matches = []
         self.matches_img = None
@@ -115,9 +124,12 @@ class FeatureMatcher:
         # measure time
         start = cv.getTickCount()
 
+        self.img1 = copy(image1)
+        self.img2 = copy(image2)
+
         # get features
-        keypoints1, descriptors1 = self.get_features(image1)
-        keypoints2, descriptors2 = self.get_features(image2)
+        self.kpt1, self.des1 = self.get_features(self.img1)
+        self.kpt2, self.des2 = self.get_features(self.img2)
 
         # match features
         if self.matcher_name == 'BF':
@@ -129,13 +141,10 @@ class FeatureMatcher:
 
             # brute force matching
             bf = cv.BFMatcher_create(normType=normType, crossCheck=True)  # TODO: why crossCheck=True?
-            matches_all = bf.match(descriptors1, descriptors2)
+            matches_all = bf.match(self.des1, self.des2)
             # sort matches_img in the order of their distance
             matches_all = sorted(matches_all, key=lambda x: x.distance)
             self.matches = matches_all[:self.BF_LIMIT]
-            # return the best matches_img
-            self.matches_img = cv.drawMatches(image1, keypoints1, image2, keypoints2, self.matches,
-                                              outImg=None, flags=cv.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
 
         elif self.matcher_name == 'FLANN':
             # FLANN parameters
@@ -145,17 +154,13 @@ class FeatureMatcher:
             # flann matching
             flann = cv.FlannBasedMatcher(index_params, search_params)
             # matching descriptor vectors using FLANN Matcher
-            matches_all = flann.knnMatch(np.float32(descriptors1), np.float32(descriptors2), k=2)
+            matches_all = flann.knnMatch(np.float32(self.des1), np.float32(self.des2), k=2)
 
             # Lowe's ratio test to filter matches_img
             self.matches = []
             for m, n in matches_all:
                 if m.distance < self.FLANN_RATIO_TH * n.distance:
                     self.matches.append(m)
-
-            # draw good matches_img
-            self.matches_img = cv.drawMatches(image1, keypoints1, image2, keypoints2, self.matches,
-                                              outImg=None, flags=cv.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
 
         else:
             raise ValueError('Invalid matcher name')
@@ -166,7 +171,29 @@ class FeatureMatcher:
         print('Time: %.2fs' % self.time)
         print('Matches: {}'.format(len(self.matches)))
 
-        return self.matches_img
+        return self.matches
+
+    def homography(self, plot=True):
+        if len(self.matches) > self.HOMOGRAPHY_MATCH_TH:
+            # get the points
+            src_pts = np.float32([self.kpt1[m.queryIdx].pt for m in self.matches]).reshape(-1, 1, 2)
+            dst_pts = np.float32([self.kpt2[m.trainIdx].pt for m in self.matches]).reshape(-1, 1, 2)
+            # compute the homography matrix
+            M, mask = cv.findHomography(src_pts, dst_pts, cv.RANSAC, self.HOMOGRAPHY_RANSAC_TH)
+            matchesMask = mask.ravel().tolist()
+
+            h, w = self.img1.shape
+            pts = np.float32([[0, 0], [0, h - 1], [w - 1, h - 1], [w - 1, 0]]).reshape(-1, 1, 2)
+            dst = cv.perspectiveTransform(pts, M)
+
+            if plot:
+                self.img2 = cv.polylines(self.img2, [np.int32(dst)], True, 255, 3, cv.LINE_AA)
+
+            return M, dst, matchesMask
+
+        else:
+            print("Not enough matches are found - {}/{}".format(len(self.matches), self.HOMOGRAPHY_MATCH_TH))
+            return None, None, None
 
     # Call function saveMatcher
     def plot_matches(self):
@@ -181,6 +208,11 @@ class FeatureMatcher:
         ax.margins(0)
 
         # Plot the images
+        M, dst, matchesMask = self.homography()
+        # draw good matches_img
+        self.matches_img = cv.drawMatches(self.img1, self.kpt1, self.img2, self.kpt2, self.matches,
+                                          matchesMask=matchesMask, outImg=None,
+                                          flags=cv.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
         ax.imshow(self.matches_img)
         ax.title.set_text('Matcher: ' + self.matcher_name +
                           ',  Detector: ' + self.detector_name +
