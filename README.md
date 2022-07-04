@@ -21,6 +21,7 @@ This is done mainly using OpenCV (3.4.2). Different can be used, however it cann
 ![Feature Detection and Matching with KAZE through the Brute Force algorithm](https://raw.githubusercontent.com/daniel1896/Feature-Matching-and-Homography/master/Results/FLANN-with-SURF-SURF.png)
 
 ## Dependencies
+- Python 2.7 or Python 3.4-3.7
 
 To install the dependencies run:
 
