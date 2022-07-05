@@ -1,21 +1,27 @@
-# Feature Detection and Matching
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/daniel1896/feature-matching-and-homography/blob/master/feature-matching-and-homography.ipynb)
+
+# Feature Matching and Homography
 
 [comment]: <> (![GitHub language count]&#40;https://img.shields.io/github/languages/count/whoisraibolt/Feature-Detection-and-Matching&#41;)
 [comment]: <> (![GitHub top language]&#40;https://img.shields.io/github/languages/top/whoisraibolt/Feature-Detection-and-Matching&#41;)
 [comment]: <> (![GitHub repo size]&#40;https://img.shields.io/github/repo-size/whoisraibolt/Feature-Detection-and-Matching&#41;)
 [comment]: <> (![GitHub]&#40;https://img.shields.io/github/license/whoisraibolt/Feature-Detection-and-Matching&#41;)
 
-Feature Detection and Matching between two images using Local Feature Descriptors and Local Binary Descriptors through the Brute Force and FLANN algorithms.
+Feature detection and mapping using classical algorithms to locate an image of an object in the target image.
 
 From this application it is possible to solve several problems in the area of Computer Vision, such as: image recovery, motion tracking, motion structure detection, object detection, recognition and tracking, 3D object reconstruction, and others.
 
 ## Overview
 
-This project performs Feature Detection and Matching with SIFT, SURF, KAZE, BRIEF, ORB, BRISK, AKAZE and FREAK through the Brute Force and FLANN algorithms using OpenCV (version 3.4.2). You can use different Versions, but it cannot be guaranteed that all feature matching approaches will work. SURF for example is not available for OpenCV versions higher than 3.4.2.
+This project performs Feature Detection and Matching with SIFT, SURF, KAZE, BRIEF, ORB, BRISK, AKAZE and FREAK through the Brute Force and FLANN algorithms. 
+It is possible to compute every combination of feature detector, descriptor and matcher to be able to easily compare and determine the best for the given input images.
+Finally the image of the object is located in the target image using homography, which is visualized by framing it in the target image.
+This is done mainly using OpenCV (3.4.2). Different can be used, however it cannot be guaranteed that all feature matching approaches will work. SURF for example is not available for OpenCV versions higher than 3.4.2.
 
-![Feature Detection and Matching with KAZE through the Brute Force algorithm](https://raw.githubusercontent.com/daniel1896/Feature-Detection-and-Matching/master/Results/FLANN-with-SURF-SURF.png)
+![Feature Detection and Matching with KAZE through the Brute Force algorithm](https://raw.githubusercontent.com/daniel1896/Feature-Matching-and-Homography/master/Results/FLANN-with-SURF-SURF.png)
 
 ## Dependencies
+- Python 2.7 or Python 3.4-3.7
 
 To install the dependencies run:
 
