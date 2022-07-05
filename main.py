@@ -92,6 +92,9 @@ if __name__ == '__main__':
 
     # read images
     image1, image2 = readImages()
+    # scale images
+    # image1 = cv.resize(image1, (0, 0), fx=0.4, fy=0.4)
+    # image2 = cv.resize(image2, (0, 0), fx=0.3, fy=0.3)
 
     if not arguments.all:
         # run a single combination
