@@ -115,14 +115,20 @@ class FeatureMatcher:
         descriptors = self.descriptor.compute(image, keypoints)[1]
         return keypoints, descriptors
 
-    def match(self, image1, image2):
+    def match(self, image1, image2, equalize=False):
         """
         :param image1: input image 1
         :param image2: input image 2
+        :param equalize: if True, equalizes the images before matching
         :return: matches_img
         """
         # measure time
         start = cv.getTickCount()
+
+        # histogram equalization
+        if equalize:
+            image1 = cv.equalizeHist(image1)
+            image2 = cv.equalizeHist(image2)
 
         self.img1 = copy(image1)
         self.img2 = copy(image2)
