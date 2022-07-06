@@ -113,8 +113,8 @@ class FeatureMatcher:
         if self.detector_name == self.descriptor_name:
             keypoints, descriptors = self.detector.detectAndCompute(image, None)
         else:
-            keypoints = self.detector.detect(image)
-            descriptors = self.descriptor.compute(image, keypoints)
+            keypoints = self.detector.detect(image, None)
+            keypoints, descriptors = self.descriptor.compute(image, keypoints)
         return keypoints, descriptors
 
     def match(self, image1, image2, equalize=False):
@@ -162,7 +162,7 @@ class FeatureMatcher:
             # flann matching
             flann = cv.FlannBasedMatcher(index_params, search_params)
             # matching descriptor vectors using FLANN Matcher
-            matches_all = flann.knnMatch(np.float32(self.des1), np.float32(self.des2), k=2)
+            matches_all = flann.knnMatch(self.des1, self.des2, k=2)
 
             # Lowe's ratio test to filter matches_img
             self.matches = []
