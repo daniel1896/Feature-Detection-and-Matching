@@ -110,7 +110,11 @@ class FeatureMatcher:
         :return: keypoints, descriptors
         """
         # detect keypoints and compute descriptors
-        keypoints, descriptors = self.detector.detectAndCompute(image, None)
+        if self.detector_name == self.descriptor_name:
+            keypoints, descriptors = self.detector.detectAndCompute(image, None)
+        else:
+            keypoints = self.detector.detect(image)
+            descriptors = self.descriptor.compute(image, keypoints)
         return keypoints, descriptors
 
     def match(self, image1, image2, equalize=False):
